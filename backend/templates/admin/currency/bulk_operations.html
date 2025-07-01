@@ -1,0 +1,115 @@
+{% extends "admin/base_site.html" %} {% load i18n admin_urls static admin_modify
+%} {% block title %}批量操作 | {{ site_title|default:_('Django site admin') }}{%
+endblock %} {% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:market_data_currency_changelist' %}">Currencies</a>
+  &rsaquo; 批量操作
+</div>
+{% endblock %} {% block content %}
+<div class="module aligned">
+  <h1>🔄 批量操作</h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <fieldset class="module aligned">
+      <h2>选择要执行的操作</h2>
+
+      <div class="form-row">
+        <div class="radio-row">
+          <label>
+            <input
+              type="radio"
+              name="operation"
+              value="fetch_all_data"
+              id="fetch_all_data"
+            />
+            <strong>📊 获取所有货币数据</strong>
+          </label>
+          <p class="help">为数据库中所有货币获取最新的市场数据</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="radio-row">
+          <label>
+            <input
+              type="radio"
+              name="operation"
+              value="train_all_models"
+              id="train_all_models"
+            />
+            <strong>🚀 训练所有模型</strong>
+          </label>
+          <p class="help">为所有有数据的货币训练预测模型</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="radio-row">
+          <label>
+            <input
+              type="radio"
+              name="operation"
+              value="full_pipeline_all"
+              id="full_pipeline_all"
+            />
+            <strong>⚡ 完整流程</strong>
+          </label>
+          <p class="help">先获取所有数据，然后训练所有模型（推荐）</p>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="submit-row">
+      <input type="submit" value="执行操作" class="default" />
+      <a href="../" class="button cancel-link">取消</a>
+    </div>
+  </form>
+
+  <fieldset class="module aligned">
+    <h2>📋 操作说明</h2>
+    <ul>
+      <li><strong>获取数据</strong>：从CoinGecko API获取最新30天的价格数据</li>
+      <li><strong>训练模型</strong>：使用Prophet算法训练价格预测模型</li>
+      <li>
+        <strong>完整流程</strong
+        >：数据获取完成后，等待5分钟再开始训练（推荐用于新系统初始化）
+      </li>
+    </ul>
+    <p class="help">
+      你可以在Celery Worker日志中监控任务进度：<br />
+      <code>docker logs crypto_celery_worker</code>
+    </p>
+  </fieldset>
+</div>
+
+<style>
+  .radio-row {
+    margin-bottom: 15px;
+  }
+  .radio-row label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  .radio-row input[type="radio"] {
+    margin-right: 8px;
+  }
+  .cancel-link {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    color: #333;
+    cursor: pointer;
+    line-height: 15px;
+    margin: 0 0 0 10px;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .cancel-link:hover {
+    background: #e0e0e0;
+  }
+</style>
+{% endblock %}

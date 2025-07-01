@@ -1,0 +1,36 @@
+{% extends "admin/change_list.html" %} {% block extrahead %} {{ block.super }}
+<style>
+  .custom-buttons {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+  }
+  .custom-buttons .button {
+    margin-right: 10px;
+    padding: 8px 15px;
+    font-weight: bold;
+  }
+  .action-buttons .button {
+    padding: 5px 8px;
+    font-size: 11px;
+    margin-right: 3px;
+    text-decoration: none;
+    border-radius: 3px;
+    display: inline-block;
+  }
+  .action-buttons .button:hover {
+    opacity: 0.8;
+  }
+</style>
+{% endblock %} {% block content_title %} {{ block.super }} {% if custom_buttons
+%}
+<div class="custom-buttons">
+  <h3>🛠️ 快速操作</h3>
+  {% for button in custom_buttons %}
+  <a href="{{ button.url }}" class="button {{ button.class }}"
+    >{{ button.title }}</a
+  >
+  {% endfor %}
+</div>
+{% endif %} {% endblock %}

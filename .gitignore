@@ -1,0 +1,61 @@
+# --- General ---
+.DS_Store
+Thumbs.db
+
+# --- Python / Django ---
+__pycache__/
+*.pyc
+*.py[cod]
+*$py.class
+.env
+.env.production
+.venv
+venv/
+env/
+staticfiles/
+media/
+db.sqlite3
+db.sqlite3-journal
+.coverage
+htmlcov/
+*.log
+local_settings.py
+
+# --- Node / Vue ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- IDE / Editor ---
+.idea/
+.vscode/
+
+# --- Docker ---
+.dockerignore
+
+# --- 模型文件（太大，不适合Git） ---
+/backend/models/*.joblib
+/backend/models/*.pkl
+
+# --- 数据库备份 ---
+*.sql
+backup_*.sql
+
+# --- SSL证书 ---
+/deployment/ssl/
+*.pem
+*.key
+*.crt
+
+# --- 临时文件 ---
+tmp/
+temp/
+logs/
+
+# --- 生产环境特定文件 ---
+docker-compose.override.yml

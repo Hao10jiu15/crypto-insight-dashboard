@@ -1,0 +1,30 @@
+# Django and Server
+django==5.0.6
+gunicorn==22.0.0
+whitenoise==6.6.0  # 新增：用于高效服务静态文件
+
+# Database
+psycopg2-binary==2.9.9
+
+# Environment & Settings
+django-environ==0.11.2
+
+# Celery for background tasks
+redis==5.0.7
+celery==5.4.0
+django-celery-beat==2.6.0
+
+# Currency field for financial data
+django-money==3.0.0
+
+# Django REST Framework for APIs
+djangorestframework==3.15.1
+django-cors-headers==4.4.0
+requests==2.32.3
+
+# Machine Learning & Forecasting
+numpy==1.26.4      # 关键修改：锁定numpy版本以兼容Prophet
+prophet==1.1.5
+pandas==2.2.2
+pandas-ta==0.3.14b
+joblib==1.4.2

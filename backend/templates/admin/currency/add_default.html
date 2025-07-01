@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %} {% load i18n admin_urls static admin_modify
+%} {% block title %}添加默认货币 | {{ site_title|default:_('Django site admin')
+}}{% endblock %} {% block breadcrumbs %}
+<div class="breadcrumbs">
+  <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+  &rsaquo;
+  <a href="{% url 'admin:market_data_currency_changelist' %}">Currencies</a>
+  &rsaquo; 添加默认货币
+</div>
+{% endblock %} {% block content %}
+<div class="module aligned">
+  <h1>🆕 添加默认货币</h1>
+
+  <div class="form-row">
+    <p class="help">这将添加以下默认的加密货币到系统中：</p>
+    <ul>
+      <li><strong>Bitcoin (BTC)</strong> - bitcoin</li>
+      <li><strong>Ethereum (ETH)</strong> - ethereum</li>
+      <li><strong>Tether (USDT)</strong> - tether</li>
+      <li><strong>BNB (BNB)</strong> - binancecoin</li>
+      <li><strong>Solana (SOL)</strong> - solana</li>
+      <li><strong>XRP (XRP)</strong> - ripple</li>
+      <li><strong>Cardano (ADA)</strong> - cardano</li>
+    </ul>
+    <p class="help">如果货币已存在，将不会重复创建。</p>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="submit-row">
+      <input type="submit" value="确认添加" class="default" />
+      <a href="../" class="button cancel-link">取消</a>
+    </div>
+  </form>
+</div>
+
+<style>
+  .cancel-link {
+    background: #f0f0f0;
+    border: 1px solid #ddd;
+    color: #333;
+    cursor: pointer;
+    line-height: 15px;
+    margin: 0 0 0 10px;
+    padding: 10px 15px;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .cancel-link:hover {
+    background: #e0e0e0;
+  }
+</style>
+{% endblock %}

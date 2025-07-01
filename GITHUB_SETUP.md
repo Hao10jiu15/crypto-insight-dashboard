@@ -19,7 +19,7 @@
 
 ```bash
 # 添加远程仓库（替换为你的实际仓库URL）
-git remote add origin https://github.com/YOUR_USERNAME/crypto-insight-dashboard.git
+git remote add origin https://github.com/Hao10jiu15/crypto-insight-dashboard.git
 
 # 推送代码到 GitHub
 git push -u origin master

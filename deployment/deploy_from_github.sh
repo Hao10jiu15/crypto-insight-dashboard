@@ -6,9 +6,9 @@ set -e  # 遇到错误立即退出
 echo "🚀 开始从GitHub部署加密货币预测系统..."
 
 # 配置变量
-REPO_URL="https://github.com/yourusername/crypto-insight-dashboard.git"
+REPO_URL="https://github.com/Hao10jiu15/crypto-insight-dashboard.git"
 DEPLOY_DIR="/opt/crypto-prediction"
-BRANCH="main"
+BRANCH="master"
 
 # 检查是否为root用户
 if [ "$EUID" -eq 0 ]; then

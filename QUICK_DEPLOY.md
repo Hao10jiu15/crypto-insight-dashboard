@@ -13,20 +13,32 @@
 
 ### 2. 在服务器上执行以下命令
 
+#### Ubuntu/Debian 系统：
 ```bash
 # 第一步：安装必要工具
 sudo apt update && sudo apt upgrade -y
 sudo apt install curl git -y
 
 # 第二步：下载并运行环境安装脚本
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+```
+
+#### CentOS/RHEL 系统：
+```bash
+# 第一步：安装必要工具
+sudo dnf update -y
+sudo dnf install curl git -y
+
+# 第二步：下载并运行环境安装脚本
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+```
 
 # 重新登录使Docker权限生效
 exit
 # 重新SSH登录
 
 # 第三步：克隆项目并部署
-curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/crypto-insight-dashboard/master/deployment/deploy_from_github.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/deploy_from_github.sh | bash
 ```
 
 ### 3. 配置域名（重要）
@@ -122,7 +134,12 @@ cd /opt/crypto-prediction
 2. **网站无法访问**
 
    ```bash
+   # Ubuntu/Debian 系统：
    sudo ufw status  # 检查防火墙
+   
+   # CentOS/RHEL 系统：
+   sudo firewall-cmd --list-ports  # 检查防火墙
+   
    sudo systemctl status nginx  # 检查Nginx状态
    ```
 
@@ -153,8 +170,14 @@ git pull origin master
 
 1. **系统监控**:
 
+   #### Ubuntu/Debian 系统：
    ```bash
    sudo apt install htop iotop
+   ```
+
+   #### CentOS/RHEL 系统：
+   ```bash
+   sudo dnf install htop iotop
    ```
 
 2. **Docker 监控**:
@@ -173,6 +196,7 @@ git pull origin master
 
 1. **防火墙配置**:
 
+   #### Ubuntu/Debian 系统：
    ```bash
    sudo ufw enable
    sudo ufw allow ssh
@@ -180,11 +204,29 @@ git pull origin master
    sudo ufw allow 443
    ```
 
+   #### CentOS/RHEL 系统：
+   ```bash
+   sudo systemctl start firewalld
+   sudo systemctl enable firewalld
+   sudo firewall-cmd --permanent --add-service=ssh
+   sudo firewall-cmd --permanent --add-port=80/tcp
+   sudo firewall-cmd --permanent --add-port=443/tcp
+   sudo firewall-cmd --reload
+   ```
+
 2. **定期更新**:
 
+   #### Ubuntu/Debian 系统：
    ```bash
    # 每周执行
    sudo apt update && sudo apt upgrade -y
+   ./deployment/manage.sh update
+   ```
+
+   #### CentOS/RHEL 系统：
+   ```bash
+   # 每周执行
+   sudo dnf update -y
    ./deployment/manage.sh update
    ```
 
@@ -202,7 +244,7 @@ git pull origin master
 如果遇到任何问题，请查看：
 
 - [完整部署文档](deployment/README.md)
-- [GitHub Issues](https://github.com/YOUR_USERNAME/crypto-insight-dashboard/issues)
+- [GitHub Issues](https://github.com/Hao10jiu15/crypto-insight-dashboard/issues)
 
 ---
 

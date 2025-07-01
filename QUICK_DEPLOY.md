@@ -14,6 +14,7 @@
 ### 2. 在服务器上执行以下命令
 
 #### Ubuntu/Debian 系统：
+
 ```bash
 # 第一步：安装必要工具
 sudo apt update && sudo apt upgrade -y
@@ -24,6 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard
 ```
 
 #### CentOS/RHEL 系统：
+
 ```bash
 # 第一步：安装必要工具
 sudo dnf update -y
@@ -33,13 +35,17 @@ sudo dnf install curl git -y
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
 ```
 
-# 重新登录使Docker权限生效
+# 重新登录使 Docker 权限生效
+
 exit
-# 重新SSH登录
+
+# 重新 SSH 登录
 
 # 第三步：克隆项目并部署
+
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/deploy_from_github.sh | bash
-```
+
+````
 
 ### 3. 配置域名（重要）
 
@@ -49,12 +55,12 @@ curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard
 
    ```bash
    nano /opt/crypto-prediction/.env.production
-   ```
+````
 
-   主要修改：
+主要修改：
 
-   - `DJANGO_ALLOWED_HOSTS`: 改为您的域名
-   - `DB_PASSWORD`: 设置安全的数据库密码
+- `DJANGO_ALLOWED_HOSTS`: 改为您的域名
+- `DB_PASSWORD`: 设置安全的数据库密码
 
 2. **更新 Nginx 配置**:
 
@@ -136,10 +142,10 @@ cd /opt/crypto-prediction
    ```bash
    # Ubuntu/Debian 系统：
    sudo ufw status  # 检查防火墙
-   
+
    # CentOS/RHEL 系统：
    sudo firewall-cmd --list-ports  # 检查防火墙
-   
+
    sudo systemctl status nginx  # 检查Nginx状态
    ```
 
@@ -171,11 +177,13 @@ git pull origin master
 1. **系统监控**:
 
    #### Ubuntu/Debian 系统：
+
    ```bash
    sudo apt install htop iotop
    ```
 
    #### CentOS/RHEL 系统：
+
    ```bash
    sudo dnf install htop iotop
    ```
@@ -197,6 +205,7 @@ git pull origin master
 1. **防火墙配置**:
 
    #### Ubuntu/Debian 系统：
+
    ```bash
    sudo ufw enable
    sudo ufw allow ssh
@@ -205,6 +214,7 @@ git pull origin master
    ```
 
    #### CentOS/RHEL 系统：
+
    ```bash
    sudo systemctl start firewalld
    sudo systemctl enable firewalld
@@ -217,6 +227,7 @@ git pull origin master
 2. **定期更新**:
 
    #### Ubuntu/Debian 系统：
+
    ```bash
    # 每周执行
    sudo apt update && sudo apt upgrade -y
@@ -224,6 +235,7 @@ git pull origin master
    ```
 
    #### CentOS/RHEL 系统：
+
    ```bash
    # 每周执行
    sudo dnf update -y

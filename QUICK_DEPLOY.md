@@ -4,10 +4,11 @@
 
 ### 1. 准备服务器
 
-您需要一台具备以下配置的Linux服务器：
+您需要一台具备以下配置的 Linux 服务器：
+
 - **操作系统**: Ubuntu 20.04+ 或 CentOS 8+
-- **内存**: 最少2GB（推荐4GB+）
-- **存储**: 至少20GB可用空间
+- **内存**: 最少 2GB（推荐 4GB+）
+- **存储**: 至少 20GB 可用空间
 - **网络**: 稳定的公网连接
 
 ### 2. 在服务器上执行以下命令
@@ -33,26 +34,31 @@ curl -fsSL https://raw.githubusercontent.com/YOUR_USERNAME/crypto-insight-dashbo
 部署脚本会提示您配置以下文件：
 
 1. **编辑生产环境配置**:
+
    ```bash
    nano /opt/crypto-prediction/.env.production
    ```
+
    主要修改：
+
    - `DJANGO_ALLOWED_HOSTS`: 改为您的域名
    - `DB_PASSWORD`: 设置安全的数据库密码
 
-2. **更新Nginx配置**:
+2. **更新 Nginx 配置**:
+
    ```bash
    nano /opt/crypto-prediction/deployment/nginx.conf
    ```
+
    将所有 `yourdomain.com` 替换为您的实际域名
 
-3. **更新前端API配置**:
+3. **更新前端 API 配置**:
    ```bash
    nano /opt/crypto-prediction/frontend/Dockerfile.prod
    ```
    将 API 地址改为您的域名
 
-### 4. 申请SSL证书
+### 4. 申请 SSL 证书
 
 ```bash
 cd /opt/crypto-prediction
@@ -108,17 +114,20 @@ cd /opt/crypto-prediction
 ### 常见问题
 
 1. **服务无法启动**
+
    ```bash
    docker-compose -f docker-compose.prod.yml logs
    ```
 
 2. **网站无法访问**
+
    ```bash
    sudo ufw status  # 检查防火墙
    sudo systemctl status nginx  # 检查Nginx状态
    ```
 
-3. **SSL证书问题**
+3. **SSL 证书问题**
+
    ```bash
    sudo certbot certificates  # 查看证书状态
    ```
@@ -131,6 +140,7 @@ cd /opt/crypto-prediction
 ### 重新部署
 
 如果需要重新部署：
+
 ```bash
 cd /opt/crypto-prediction
 git pull origin master
@@ -142,11 +152,13 @@ git pull origin master
 建议安装以下监控工具：
 
 1. **系统监控**:
+
    ```bash
    sudo apt install htop iotop
    ```
 
-2. **Docker监控**:
+2. **Docker 监控**:
+
    ```bash
    docker stats
    ```
@@ -160,6 +172,7 @@ git pull origin master
 ## 🔒 安全建议
 
 1. **防火墙配置**:
+
    ```bash
    sudo ufw enable
    sudo ufw allow ssh
@@ -168,6 +181,7 @@ git pull origin master
    ```
 
 2. **定期更新**:
+
    ```bash
    # 每周执行
    sudo apt update && sudo apt upgrade -y
@@ -186,6 +200,7 @@ git pull origin master
 恭喜！您的加密货币预测系统现在已经在生产环境中运行了。
 
 如果遇到任何问题，请查看：
+
 - [完整部署文档](deployment/README.md)
 - [GitHub Issues](https://github.com/YOUR_USERNAME/crypto-insight-dashboard/issues)
 

@@ -5,6 +5,7 @@
 1. 访问 [GitHub](https://github.com) 并登录
 2. 点击右上角的 "+" 按钮，选择 "New repository"
 3. 填写仓库信息：
+
    - Repository name: `crypto-insight-dashboard`
    - Description: `Cryptocurrency price prediction system with Django backend and Vue frontend`
    - 选择 Public 或 Private（根据需要）

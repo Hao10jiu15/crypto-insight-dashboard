@@ -19,9 +19,18 @@ curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard
 # 方法1：使用优化的Ubuntu安装脚本 (推荐)
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_ubuntu.sh | bash
 
-# 方法2：使用通用安装脚本
+# 方法2：中国网络环境优化版本 (网络慢时推荐)
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_ubuntu_cn.sh | bash
+
+# 方法3：使用通用安装脚本
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
 ```
+
+**网络优化说明：**
+
+- 方法 1：使用 GitHub 原版 + 多镜像源回退
+- 方法 2：全程使用中国镜像源（阿里云 APT + 清华 pip + Docker 镜像加速）
+- 方法 3：通用脚本，适配多种系统
 
 您需要一台具备以下配置的 Linux 服务器：
 

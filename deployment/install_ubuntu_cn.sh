@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ubuntu 22.04 快速环境安装脚本 - 针对Docker 26.1.3优化
+# Ubuntu 22.04 中国网络环境优化安装脚本
 
 set -e
 
@@ -15,35 +15,65 @@ log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_error() { echo -e "${RED}❌ $1${NC}"; }
 
-echo -e "${BLUE}🚀 Ubuntu 22.04 快速环境安装${NC}"
+echo -e "${BLUE}🚀 Ubuntu 22.04 中国网络环境优化安装${NC}"
 
 # 显示系统信息
 log_info "系统信息："
 uname -a
 lsb_release -a
 
+# 备份并配置APT镜像源（阿里云）
+log_info "配置APT镜像源（阿里云）..."
+sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup 2>/dev/null || true
+
+cat << 'EOF' | sudo tee /etc/apt/sources.list
+# 阿里云Ubuntu镜像源
+deb https://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
+deb-src https://mirrors.aliyun.com/ubuntu/ jammy main restricted universe multiverse
+
+deb https://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
+deb-src https://mirrors.aliyun.com/ubuntu/ jammy-updates main restricted universe multiverse
+
+deb https://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
+deb-src https://mirrors.aliyun.com/ubuntu/ jammy-backports main restricted universe multiverse
+
+deb https://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse
+deb-src https://mirrors.aliyun.com/ubuntu/ jammy-security main restricted universe multiverse
+EOF
+
+log_success "APT镜像源配置完成"
+
 # 更新系统
 log_info "更新系统包..."
 sudo apt update && sudo apt upgrade -y
 log_success "系统更新完成"
 
-# 安装必要工具
+# 安装基础工具
 log_info "安装基础工具..."
 sudo apt install -y curl wget gnupg lsb-release ca-certificates apt-transport-https software-properties-common python3-pip
 log_success "基础工具安装完成"
 
-# 安装Docker CE (最新稳定版)
-log_info "安装Docker CE..."
+# 配置pip镜像源
+log_info "配置pip镜像源..."
+mkdir -p ~/.pip
+cat << 'EOF' > ~/.pip/pip.conf
+[global]
+index-url = https://pypi.tuna.tsinghua.edu.cn/simple/
+trusted-host = pypi.tuna.tsinghua.edu.cn
+EOF
+log_success "pip镜像源配置完成"
+
+# 安装Docker（使用阿里云镜像）
+log_info "安装Docker CE（阿里云镜像）..."
 
 # 卸载旧版本
 sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
 
-# 添加Docker官方GPG密钥
-sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# 添加Docker官方GPG密钥（使用阿里云镜像）
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 
-# 添加Docker仓库
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# 添加Docker仓库（阿里云镜像）
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # 更新包索引
 sudo apt update
@@ -71,7 +101,8 @@ cat << 'EOF' | sudo tee /etc/docker/daemon.json
         "https://docker.mirrors.ustc.edu.cn",
         "https://hub-mirror.c.163.com",
         "https://reg-mirror.qiniu.com",
-        "https://registry.docker-cn.com"
+        "https://registry.docker-cn.com",
+        "https://mirror.baidubce.com"
     ],
     "log-driver": "json-file",
     "log-opts": {
@@ -87,55 +118,14 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 log_success "Docker镜像加速配置完成"
 
-# 安装Docker Compose (多源下载优化)
-log_info "安装Docker Compose..."
-COMPOSE_VERSION="v2.24.0"
-
-# 定义多个下载源（按优先级排序）
-DOWNLOAD_URLS=(
-    "https://ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://mirror.ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://get.daocloud.io/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-)
-
-# 尝试从不同源下载
-DOWNLOAD_SUCCESS=false
-for url in "${DOWNLOAD_URLS[@]}"; do
-    log_info "尝试从镜像源下载: $(echo $url | cut -d'/' -f3)"
-    if sudo curl -L --connect-timeout 10 --max-time 60 "$url" -o /usr/local/bin/docker-compose 2>/dev/null; then
-        if [ -s /usr/local/bin/docker-compose ]; then
-            DOWNLOAD_SUCCESS=true
-            log_success "Docker Compose下载成功！"
-            break
-        else
-            log_warning "下载的文件为空，尝试下一个源..."
-            sudo rm -f /usr/local/bin/docker-compose
-        fi
-    else
-        log_warning "下载失败，尝试下一个源..."
-    fi
-done
-
-if [ "$DOWNLOAD_SUCCESS" = false ]; then
-    log_warning "所有下载源都失败，使用pip安装（推荐中国用户）..."
-    sudo pip3 install docker-compose -i https://pypi.tuna.tsinghua.edu.cn/simple/
-    if [ $? -eq 0 ]; then
-        log_success "Docker Compose通过pip安装成功！"
-    else
-        log_error "Docker Compose安装失败！"
-        exit 1
-    fi
-else
-    sudo chmod +x /usr/local/bin/docker-compose
-fi
-
-# 验证Docker Compose
-if command -v docker-compose &> /dev/null; then
+# 安装Docker Compose（使用pip，更稳定）
+log_info "安装Docker Compose（使用pip）..."
+sudo pip3 install docker-compose
+if [ $? -eq 0 ]; then
     COMPOSE_VER=$(docker-compose --version)
     log_success "Docker Compose安装完成: $COMPOSE_VER"
 else
-    log_error "Docker Compose安装验证失败！"
+    log_error "Docker Compose安装失败！"
     exit 1
 fi
 
@@ -196,11 +186,22 @@ echo ""
 echo -e "${BLUE}🔥 防火墙状态：${NC}"
 sudo ufw status numbered
 
+# 显示Docker镜像加速状态
 echo ""
-log_success "🎉 Ubuntu 22.04 环境安装完成！"
+echo -e "${BLUE}🐳 Docker镜像加速状态：${NC}"
+docker info | grep -A 5 "Registry Mirrors" || echo "  镜像加速已配置"
+
+echo ""
+log_success "🎉 Ubuntu 22.04 中国网络环境优化安装完成！"
 echo ""
 log_warning "重要提示："
 log_warning "1. 请执行 'exit' 退出当前SSH会话"
 log_warning "2. 重新登录SSH以使Docker权限生效"
 log_warning "3. 重新登录后运行部署脚本："
 echo -e "${BLUE}   curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/deploy_from_github.sh | bash${NC}"
+echo ""
+log_info "💡 提示：此脚本已优化中国网络环境，包括："
+echo "  - 阿里云APT镜像源"
+echo "  - 清华大学pip镜像源"
+echo "  - 阿里云Docker仓库"
+echo "  - 多个Docker镜像加速器"

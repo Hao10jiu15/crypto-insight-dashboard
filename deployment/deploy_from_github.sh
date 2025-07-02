@@ -106,36 +106,45 @@
     if [ ! -f ".env.production" ]; then
         echo "📝 创建生产环境配置文件..."
         cp .env.production.example .env.production
-        
-        echo "⚠️  重要：请编辑 .env.production 文件并配置以下项目："
-        echo "   - DB_PASSWORD (数据库密码)"
-        echo "   - DJANGO_SECRET_KEY (Django密钥)"
-        echo "   - DJANGO_ALLOWED_HOSTS (您的域名)"
-        echo "   - EMAIL_* (邮件配置，可选)"
-        echo ""
-        echo "配置文件位置: $DEPLOY_DIR/.env.production"
-        echo ""
-        read -p "配置完成后按回车继续..." -r
+        log_success "生产环境配置文件已创建"
+    else
+        log_info "生产环境配置文件已存在"
     fi
 
     # 检查域名配置
     echo "🌐 检查域名配置..."
+    
+    # 获取服务器IP地址
+    SERVER_IP=$(curl -s ifconfig.me 2>/dev/null || curl -s icanhazip.com 2>/dev/null || echo "127.0.0.1")
+    echo "🔍 检测到服务器IP: $SERVER_IP"
+    
+    # 自动更新nginx配置中的域名
     if grep -q "yourdomain.com" deployment/nginx.conf; then
-        echo "⚠️  请更新 deployment/nginx.conf 中的域名配置"
-        echo "将 'yourdomain.com' 替换为您的实际域名"
-        read -p "更新完成后按回车继续..." -r
+        log_warning "自动更新nginx配置中的域名为服务器IP..."
+        sed -i "s/yourdomain.com/$SERVER_IP/g" deployment/nginx.conf
+        log_success "nginx配置已更新"
     fi
 
+    # 自动更新前端配置中的API地址
     if grep -q "yourdomain.com" frontend/Dockerfile.prod; then
-        echo "⚠️  请更新 frontend/Dockerfile.prod 中的API地址"
-        echo "将 'yourdomain.com' 替换为您的实际域名"
-        read -p "更新完成后按回车继续..." -r
+        log_warning "自动更新前端API地址为服务器IP..."
+        sed -i "s/yourdomain.com/$SERVER_IP/g" frontend/Dockerfile.prod
+        log_success "前端API地址已更新"
+    fi
+    
+    # 自动更新.env.production配置
+    echo "⚙️  自动配置生产环境变量..."
+    if [ -f ".env.production" ]; then
+        # 更新ALLOWED_HOSTS
+        sed -i "s/DJANGO_ALLOWED_HOSTS=.*/DJANGO_ALLOWED_HOSTS=$SERVER_IP,localhost,127.0.0.1/g" .env.production
+        log_success "ALLOWED_HOSTS已更新为: $SERVER_IP,localhost,127.0.0.1"
     fi
 
     # 生成Django密钥（如果需要）
     if grep -q "CHANGE_THIS_VERY_SECURE_SECRET_KEY" .env.production; then
         echo "🔐 生成Django密钥..."
-        SECRET_KEY=$(python3 -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())')
+        # 使用更通用的方法生成密钥，不依赖Django模块
+        SECRET_KEY=$(python3 -c "import secrets; import string; chars = string.ascii_letters + string.digits + '!@#$%^&*(-_=+)'; print(''.join(secrets.choice(chars) for i in range(50)))")
         sed -i "s/CHANGE_THIS_VERY_SECURE_SECRET_KEY/$SECRET_KEY/g" .env.production
         echo "✅ Django密钥已生成"
     fi

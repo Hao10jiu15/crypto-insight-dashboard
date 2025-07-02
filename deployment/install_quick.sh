@@ -1,5 +1,5 @@
 #!/bin/bash
-# Ubuntu 22.04 快速安装脚本 - 完全非交互模式
+# Ubuntu 22.04 快速安装脚本 - 完全非交互模式（已优化网络和稳定性）
 
 set -e
 
@@ -28,7 +28,8 @@ sudo apt --fix-broken install -y 2>/dev/null || true
 # 更新系统
 log_info "更新系统..."
 sudo apt update -qq
-sudo apt upgrade -yq 2>/dev/null
+# 使用 dist-upgrade 更全面地处理依赖关系，解决类似 cloud-init 被搁置的问题
+sudo apt dist-upgrade -yq 2>/dev/null
 
 # 安装基础工具
 log_info "安装基础工具..."
@@ -42,36 +43,36 @@ sudo apt install -yq --no-install-recommends \
     gnupg \
     lsb-release
 
-# 安装Docker（处理containerd冲突）
+# 安装Docker
 log_info "安装Docker..."
-# 先移除可能冲突的包
-sudo apt remove -yq containerd runc 2>/dev/null || true
+# 先移除可能冲突的旧版或系统自带包
+sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
 sudo apt autoremove -yq 2>/dev/null || true
 
-# 清理Docker相关包
-sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
-
-# 添加Docker官方GPG密钥
+# 添加Docker GPG密钥（使用阿里云镜像以提高稳定性）
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+# 强制删除旧文件以避免交互式提示
+sudo rm -f /etc/apt/keyrings/docker.gpg
+curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-# 添加Docker仓库
+# 添加Docker仓库（使用阿里云镜像）
 echo \
-  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://mirrors.aliyun.com/docker-ce/linux/ubuntu \
   $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 # 更新包索引
 sudo apt update -qq
 
 # 安装Docker Engine
+log_info "安装最新版Docker Engine..."
 sudo apt install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
+# 启动并设置Docker开机自启
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker $USER
 
-# 安装Docker Compose（现在已包含在docker-compose-plugin中）
-log_info "Docker Compose已随Docker安装..."
+log_info "Docker Compose已作为插件随Docker安装..."
 
 # 安装Nginx
 log_info "安装Nginx..."
@@ -82,10 +83,10 @@ sudo systemctl enable nginx
 # 配置防火墙
 log_info "配置防火墙..."
 sudo apt install -yq --no-install-recommends ufw
-sudo ufw --force enable
 sudo ufw allow ssh
 sudo ufw allow 80/tcp
 sudo ufw allow 443/tcp
+sudo ufw --force enable
 
 # 验证安装
 echo ""

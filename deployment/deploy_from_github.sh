@@ -173,6 +173,36 @@
     $COMPOSE_CMD -f docker-compose.prod.yml down --volumes --remove-orphans 2>/dev/null || true
     docker system prune -f
 
+    # 配置Docker镜像加速器（解决网络问题）
+    echo "🌐 配置Docker镜像加速器..."
+    sudo mkdir -p /etc/docker
+    if [ ! -f /etc/docker/daemon.json ] || ! grep -q "registry-mirrors" /etc/docker/daemon.json; then
+        cat << 'DOCKER_EOF' | sudo tee /etc/docker/daemon.json
+{
+    "registry-mirrors": [
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://hub-mirror.c.163.com",
+        "https://reg-mirror.qiniu.com",
+        "https://registry.docker-cn.com",
+        "https://mirror.baidubce.com"
+    ],
+    "log-driver": "json-file",
+    "log-opts": {
+        "max-size": "100m",
+        "max-file": "3"
+    }
+}
+DOCKER_EOF
+        
+        # 重启Docker服务应用镜像加速配置
+        sudo systemctl daemon-reload
+        sudo systemctl restart docker
+        sleep 10
+        log_success "Docker镜像加速器配置完成"
+    else
+        log_info "Docker镜像加速器已配置"
+    fi
+
     # 构建和启动服务
     echo "🔨 构建并启动服务..."
     $COMPOSE_CMD -f docker-compose.prod.yml build --no-cache

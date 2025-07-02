@@ -2,7 +2,26 @@
 
 ## 🎯 一键部署流程
 
-### 1. 准备服务器
+####### 阿里云 Linux (Alibaba Cloud Linux) 系统：
+
+```bash
+# 第一步：安装必要工具
+sudo yum update -y
+sudo yum install curl git -y
+
+# 第二步：下载并运行环境安装脚本
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+```
+
+#### Ubuntu 22.04 (推荐) 系统：
+
+```bash
+# 方法1：使用优化的Ubuntu安装脚本 (推荐)
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_ubuntu.sh | bash
+
+# 方法2：使用通用安装脚本
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+```
 
 您需要一台具备以下配置的 Linux 服务器：
 

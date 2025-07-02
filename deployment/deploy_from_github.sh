@@ -1,22 +1,43 @@
 #!/bin/bash
-# GitHub部署脚本 - 从GitHub克隆并部署
+# GitHub部署脚本 - 从GitHub克隆并部署 (优化版本)
 
 set -e  # 遇到错误立即退出
 
-echo "🚀 开始从GitHub部署加密货币预测系统..."
+# 彩色输出函数
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info() { echo -e "${BLUE}ℹ️  $1${NC}"; }
+log_success() { echo -e "${GREEN}✅ $1${NC}"; }
+log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
+log_error() { echo -e "${RED}❌ $1${NC}"; }
+
+echo -e "${BLUE}🚀 开始从GitHub部署加密货币预测系统...${NC}"
 
 # 配置变量
 REPO_URL="https://github.com/Hao10jiu15/crypto-insight-dashboard.git"
 DEPLOY_DIR="/opt/crypto-prediction"
 BRANCH="master"
 
+# 显示部署信息
+log_info "部署配置："
+echo "  仓库地址: $REPO_URL"
+echo "  部署目录: $DEPLOY_DIR" 
+echo "  分支: $BRANCH"
+echo "  当前用户: $(whoami)"
+echo "  系统信息: $(uname -a | cut -d' ' -f1-3)"
+
 # 检查是否为root用户
 if [ "$EUID" -eq 0 ]; then
-    echo "⚠️  警告：不建议使用root用户运行此脚本"
-    echo "请使用普通用户并确保该用户在docker组中"
+    log_warning "不建议使用root用户运行此脚本"
+    log_warning "建议使用普通用户并确保该用户在docker组中"
     read -p "是否继续？(y/N): " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "部署已取消"
         exit 1
     fi
 fi
@@ -24,15 +45,34 @@ fi
 # 检查必要的命令
 check_command() {
     if ! command -v $1 &> /dev/null; then
-        echo "❌ 错误：$1 命令未找到，请先安装"
+        log_error "$1 命令未找到，请先运行环境安装脚本"
+        log_info "运行: curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash"
         exit 1
     fi
+    log_success "$1 已安装: $(command -v $1)"
 }
 
-echo "🔍 检查必要的工具..."
+log_info "检查必要的工具..."
 check_command git
 check_command docker
 check_command docker-compose
+
+# 检查Docker服务状态
+if ! systemctl is-active --quiet docker; then
+    log_error "Docker服务未运行，请启动Docker服务"
+    log_info "运行: sudo systemctl start docker"
+    exit 1
+fi
+log_success "Docker服务正在运行"
+
+# 检查用户是否在docker组中
+if ! groups | grep -q docker; then
+    log_error "当前用户不在docker组中"
+    log_info "请运行: sudo usermod -aG docker $(whoami)"
+    log_info "然后重新登录SSH"
+    exit 1
+fi
+log_success "用户已在docker组中"
 
 # 停止现有服务（如果存在）
 echo "🛑 停止现有服务..."

@@ -55,7 +55,26 @@
     log_info "检查必要的工具..."
     check_command git
     check_command docker
-    check_command docker-compose
+    
+    # 检查Docker Compose（优先使用plugin版本）
+    if docker compose version &> /dev/null; then
+        COMPOSE_CMD="docker compose"
+        log_success "Docker Compose (plugin) 已安装: $(docker compose version)"
+    elif command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD="docker-compose"
+        log_warning "使用旧版本docker-compose，建议升级到docker compose plugin"
+        # 检查版本兼容性
+        COMPOSE_VERSION=$(docker-compose --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if [[ $(echo "$COMPOSE_VERSION" | cut -d. -f1) -lt 2 ]]; then
+            log_error "docker-compose版本过低 ($COMPOSE_VERSION)，需要2.0+版本"
+            log_info "请升级Docker Compose或重新运行安装脚本"
+            exit 1
+        fi
+        log_success "docker-compose 已安装: $(command -v docker-compose)"
+    else
+        log_error "Docker Compose 未找到，请先运行环境安装脚本"
+        exit 1
+    fi
 
     # 检查Docker服务状态
     if ! systemctl is-active --quiet docker; then
@@ -78,7 +97,7 @@
     echo "🛑 停止现有服务..."
     if [ -d "$DEPLOY_DIR" ]; then
         cd "$DEPLOY_DIR"
-        docker-compose -f docker-compose.prod.yml down 2>/dev/null || true
+        $COMPOSE_CMD -f docker-compose.prod.yml down 2>/dev/null || true
     fi
 
     # 创建部署目录
@@ -151,13 +170,13 @@
 
     # 清理旧的镜像和容器
     echo "🧹 清理旧的容器和镜像..."
-    docker-compose -f docker-compose.prod.yml down --volumes --remove-orphans 2>/dev/null || true
+    $COMPOSE_CMD -f docker-compose.prod.yml down --volumes --remove-orphans 2>/dev/null || true
     docker system prune -f
 
     # 构建和启动服务
     echo "🔨 构建并启动服务..."
-    docker-compose -f docker-compose.prod.yml build --no-cache
-    docker-compose -f docker-compose.prod.yml up -d
+    $COMPOSE_CMD -f docker-compose.prod.yml build --no-cache
+    $COMPOSE_CMD -f docker-compose.prod.yml up -d
 
     # 等待服务启动
     echo "⏳ 等待服务启动..."
@@ -165,15 +184,15 @@
 
     # 检查服务状态
     echo "🔍 检查服务状态..."
-    docker-compose -f docker-compose.prod.yml ps
+    $COMPOSE_CMD -f docker-compose.prod.yml ps
 
     # 运行数据库迁移
     echo "🗃️ 运行数据库迁移..."
-    docker-compose -f docker-compose.prod.yml exec -T backend python manage.py migrate
+    $COMPOSE_CMD -f docker-compose.prod.yml exec -T backend python manage.py migrate
 
     # 创建超级用户（如果不存在）
     echo "👤 创建管理员用户..."
-    docker-compose -f docker-compose.prod.yml exec -T backend python manage.py shell << 'EOF'
+    $COMPOSE_CMD -f docker-compose.prod.yml exec -T backend python manage.py shell << 'EOF'
     from django.contrib.auth.models import User
     import os
     if not User.objects.filter(username='admin').exists():
@@ -185,11 +204,11 @@
 
     # 收集静态文件
     echo "📦 收集静态文件..."
-    docker-compose -f docker-compose.prod.yml exec -T backend python manage.py collectstatic --noinput
+    $COMPOSE_CMD -f docker-compose.prod.yml exec -T backend python manage.py collectstatic --noinput
 
     # 初始化默认货币
     echo "💰 初始化默认货币..."
-    docker-compose -f docker-compose.prod.yml exec -T backend python manage.py init_currencies
+    $COMPOSE_CMD -f docker-compose.prod.yml exec -T backend python manage.py init_currencies
 
     # 给脚本执行权限
     chmod +x deployment/manage.sh
@@ -202,14 +221,14 @@
         echo "✅ 后端API正常运行"
     else
         echo "❌ 后端API访问失败"
-        echo "检查日志: docker-compose -f docker-compose.prod.yml logs backend"
+        echo "检查日志: $COMPOSE_CMD -f docker-compose.prod.yml logs backend"
     fi
 
     if curl -f http://localhost/ > /dev/null 2>&1; then
         echo "✅ 前端应用正常运行"
     else
         echo "❌ 前端应用访问失败"
-        echo "检查日志: docker-compose -f docker-compose.prod.yml logs nginx"
+        echo "检查日志: $COMPOSE_CMD -f docker-compose.prod.yml logs nginx"
     fi
 
     # 显示部署信息

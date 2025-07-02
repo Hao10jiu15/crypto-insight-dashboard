@@ -70,8 +70,9 @@ log_success "pip镜像源配置完成"
 # 安装Docker（使用阿里云镜像）
 log_info "安装Docker CE（阿里云镜像）..."
 
-# 卸载旧版本
+# 卸载旧版本和可能冲突的包
 sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
+sudo apt autoremove -yq 2>/dev/null || true
 
 # 添加Docker官方GPG密钥（使用阿里云镜像）
 curl -fsSL https://mirrors.aliyun.com/docker-ce/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -122,15 +123,24 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 log_success "Docker镜像加速配置完成"
 
-# 安装Docker Compose（使用pip，更稳定）
-log_info "安装Docker Compose（使用pip）..."
-sudo pip3 install docker-compose
-if [ $? -eq 0 ]; then
-    COMPOSE_VER=$(docker-compose --version)
+# Docker Compose现在已包含在docker-compose-plugin中
+log_info "验证Docker Compose..."
+if docker compose version &> /dev/null; then
+    COMPOSE_VER=$(docker compose version)
     log_success "Docker Compose安装完成: $COMPOSE_VER"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_VER=$(docker-compose --version)
+    log_success "Docker Compose（独立版本）: $COMPOSE_VER"
 else
-    log_error "Docker Compose安装失败！"
-    exit 1
+    log_warning "Docker Compose未找到，尝试安装独立版本..."
+    sudo pip3 install docker-compose
+    if [ $? -eq 0 ]; then
+        COMPOSE_VER=$(docker-compose --version)
+        log_success "Docker Compose安装完成: $COMPOSE_VER"
+    else
+        log_error "Docker Compose安装失败！"
+        exit 1
+    fi
 fi
 
 # 安装Nginx

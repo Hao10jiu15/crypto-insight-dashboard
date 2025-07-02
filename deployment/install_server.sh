@@ -137,6 +137,10 @@ if ! check_docker; then
         # Ubuntu系统优化安装
         log_info "Ubuntu系统，使用官方APT仓库安装Docker..."
         
+        # 先移除可能冲突的包
+        sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
+        sudo apt autoremove -yq 2>/dev/null || true
+        
         # 添加Docker的官方GPG密钥
         sudo mkdir -p /etc/apt/keyrings
         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg

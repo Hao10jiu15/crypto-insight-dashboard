@@ -42,16 +42,36 @@ sudo apt install -yq --no-install-recommends \
     gnupg \
     lsb-release
 
-# 安装Docker（使用apt仓库中的版本，避免复杂配置）
+# 安装Docker（处理containerd冲突）
 log_info "安装Docker..."
-sudo apt install -yq --no-install-recommends docker.io
+# 先移除可能冲突的包
+sudo apt remove -yq containerd runc 2>/dev/null || true
+sudo apt autoremove -yq 2>/dev/null || true
+
+# 清理Docker相关包
+sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
+
+# 添加Docker官方GPG密钥
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+# 添加Docker仓库
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# 更新包索引
+sudo apt update -qq
+
+# 安装Docker Engine
+sudo apt install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
 sudo systemctl start docker
 sudo systemctl enable docker
 sudo usermod -aG docker $USER
 
-# 安装Docker Compose（使用pip，最稳定）
-log_info "安装Docker Compose..."
-sudo pip3 install docker-compose -q
+# 安装Docker Compose（现在已包含在docker-compose-plugin中）
+log_info "Docker Compose已随Docker安装..."
 
 # 安装Nginx
 log_info "安装Nginx..."
@@ -78,7 +98,9 @@ else
     log_error "Docker安装失败"
 fi
 
-if command -v docker-compose &> /dev/null; then
+if docker compose version &> /dev/null; then
+    log_success "Docker Compose: $(docker compose version)"
+elif command -v docker-compose &> /dev/null; then
     log_success "Docker Compose: $(docker-compose --version)"
 else
     log_error "Docker Compose安装失败"

@@ -39,8 +39,9 @@ log_success "基础工具安装完成"
 # 安装Docker CE (最新稳定版)
 log_info "安装Docker CE..."
 
-# 卸载旧版本
+# 卸载旧版本和可能冲突的包
 sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
+sudo apt autoremove -yq 2>/dev/null || true
 
 # 添加Docker官方GPG密钥
 sudo mkdir -p /etc/apt/keyrings
@@ -91,56 +92,62 @@ sudo systemctl daemon-reload
 sudo systemctl restart docker
 log_success "Docker镜像加速配置完成"
 
-# 安装Docker Compose (多源下载优化)
-log_info "安装Docker Compose..."
-COMPOSE_VERSION="v2.24.0"
-
-# 定义多个下载源（按优先级排序）
-DOWNLOAD_URLS=(
-    "https://ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://mirror.ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-    "https://get.daocloud.io/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
-)
-
-# 尝试从不同源下载
-DOWNLOAD_SUCCESS=false
-for url in "${DOWNLOAD_URLS[@]}"; do
-    log_info "尝试从镜像源下载: $(echo $url | cut -d'/' -f3)"
-    if sudo curl -L --connect-timeout 10 --max-time 60 "$url" -o /usr/local/bin/docker-compose 2>/dev/null; then
-        if [ -s /usr/local/bin/docker-compose ]; then
-            DOWNLOAD_SUCCESS=true
-            log_success "Docker Compose下载成功！"
-            break
+# Docker Compose现在已包含在docker-compose-plugin中
+log_info "验证Docker Compose..."
+if docker compose version &> /dev/null; then
+    COMPOSE_VER=$(docker compose version)
+    log_success "Docker Compose安装完成: $COMPOSE_VER"
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_VER=$(docker-compose --version)
+    log_success "Docker Compose（独立版本）: $COMPOSE_VER"
+else
+    log_warning "Docker Compose未找到，尝试下载独立版本..."
+    COMPOSE_VERSION="v2.24.0"
+    
+    # 定义多个下载源（按优先级排序）
+    DOWNLOAD_URLS=(
+        "https://ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+        "https://mirror.ghproxy.com/https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+        "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+        "https://get.daocloud.io/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-linux-x86_64"
+    )
+    
+    # 尝试从不同源下载
+    DOWNLOAD_SUCCESS=false
+    for url in "${DOWNLOAD_URLS[@]}"; do
+        log_info "尝试从镜像源下载: $(echo $url | cut -d'/' -f3)"
+        if sudo curl -L --connect-timeout 10 --max-time 60 "$url" -o /usr/local/bin/docker-compose 2>/dev/null; then
+            if [ -s /usr/local/bin/docker-compose ]; then
+                DOWNLOAD_SUCCESS=true
+                sudo chmod +x /usr/local/bin/docker-compose
+                log_success "Docker Compose下载成功！"
+                break
+            else
+                log_warning "下载的文件为空，尝试下一个源..."
+                sudo rm -f /usr/local/bin/docker-compose
+            fi
         else
-            log_warning "下载的文件为空，尝试下一个源..."
-            sudo rm -f /usr/local/bin/docker-compose
+            log_warning "下载失败，尝试下一个源..."
         fi
-    else
-        log_warning "下载失败，尝试下一个源..."
+    done
+    
+    if [ "$DOWNLOAD_SUCCESS" = false ]; then
+        log_warning "所有下载源都失败，使用pip安装..."
+        sudo pip3 install docker-compose -i https://pypi.tuna.tsinghua.edu.cn/simple/
+        if [ $? -ne 0 ]; then
+            log_error "Docker Compose安装失败！"
+            exit 1
+        fi
     fi
-done
-
-if [ "$DOWNLOAD_SUCCESS" = false ]; then
-    log_warning "所有下载源都失败，使用pip安装（推荐中国用户）..."
-    sudo pip3 install docker-compose -i https://pypi.tuna.tsinghua.edu.cn/simple/
-    if [ $? -eq 0 ]; then
-        log_success "Docker Compose通过pip安装成功！"
+    
+    # 最终验证
+    if command -v docker-compose &> /dev/null; then
+        COMPOSE_VER=$(docker-compose --version)
+        log_success "Docker Compose安装完成: $COMPOSE_VER"
     else
-        log_error "Docker Compose安装失败！"
+        log_error "Docker Compose安装验证失败！"
         exit 1
     fi
-else
-    sudo chmod +x /usr/local/bin/docker-compose
-fi
-
-# 验证Docker Compose
-if command -v docker-compose &> /dev/null; then
-    COMPOSE_VER=$(docker-compose --version)
-    log_success "Docker Compose安装完成: $COMPOSE_VER"
-else
-    log_error "Docker Compose安装验证失败！"
-    exit 1
 fi
 
 # 安装Nginx

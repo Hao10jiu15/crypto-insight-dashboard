@@ -1,7 +1,10 @@
 #!/bin/bash
-# Ubuntu 22.04 快速环境安装脚本 - 针对Docker 26.1.3优化
+# Ubuntu 22.04 快速环境安装脚本 - 针对Docker 26.1.3优化（非交互模式）
 
 set -e
+
+# 设置非交互模式
+export DEBIAN_FRONTEND=noninteractive
 
 # 彩色输出
 GREEN='\033[0;32m'
@@ -15,7 +18,7 @@ log_success() { echo -e "${GREEN}✅ $1${NC}"; }
 log_warning() { echo -e "${YELLOW}⚠️  $1${NC}"; }
 log_error() { echo -e "${RED}❌ $1${NC}"; }
 
-echo -e "${BLUE}🚀 Ubuntu 22.04 快速环境安装${NC}"
+echo -e "${BLUE}🚀 Ubuntu 22.04 快速环境安装（非交互模式）${NC}"
 
 # 显示系统信息
 log_info "系统信息："
@@ -23,20 +26,21 @@ uname -a
 lsb_release -a
 
 # 更新系统
-log_info "更新系统包..."
-sudo apt update && sudo apt upgrade -y
+log_info "更新系统包（非交互模式）..."
+sudo apt update
+sudo apt upgrade -yq
 log_success "系统更新完成"
 
 # 安装必要工具
-log_info "安装基础工具..."
-sudo apt install -y curl wget gnupg lsb-release ca-certificates apt-transport-https software-properties-common python3-pip
+log_info "安装基础工具（非交互模式）..."
+sudo apt install -yq curl wget gnupg lsb-release ca-certificates apt-transport-https software-properties-common python3-pip
 log_success "基础工具安装完成"
 
 # 安装Docker CE (最新稳定版)
 log_info "安装Docker CE..."
 
 # 卸载旧版本
-sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null || true
+sudo apt remove -yq docker docker-engine docker.io containerd runc 2>/dev/null || true
 
 # 添加Docker官方GPG密钥
 sudo mkdir -p /etc/apt/keyrings
@@ -48,8 +52,8 @@ echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.
 # 更新包索引
 sudo apt update
 
-# 安装Docker CE
-sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+# 安装Docker CE（非交互模式）
+sudo apt install -yq docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # 启动Docker服务
 sudo systemctl start docker
@@ -140,27 +144,27 @@ else
 fi
 
 # 安装Nginx
-log_info "安装Nginx..."
-sudo apt install -y nginx
+log_info "安装Nginx（非交互模式）..."
+sudo apt install -yq nginx
 sudo systemctl start nginx
 sudo systemctl enable nginx
 NGINX_VERSION=$(nginx -v 2>&1)
 log_success "Nginx安装完成: $NGINX_VERSION"
 
 # 安装Certbot
-log_info "安装Certbot..."
-sudo apt install -y certbot python3-certbot-nginx
+log_info "安装Certbot（非交互模式）..."
+sudo apt install -yq certbot python3-certbot-nginx
 CERTBOT_VERSION=$(certbot --version)
 log_success "Certbot安装完成: $CERTBOT_VERSION"
 
 # 安装Git
-log_info "安装Git..."
-sudo apt install -y git
+log_info "安装Git（非交互模式）..."
+sudo apt install -yq git
 GIT_VERSION=$(git --version)
 log_success "Git安装完成: $GIT_VERSION"
 
-# 配置防火墙
-log_info "配置UFW防火墙..."
+# 配置防火墙（非交互模式）
+log_info "配置UFW防火墙（非交互模式）..."
 sudo ufw --force enable
 sudo ufw allow ssh
 sudo ufw allow 80/tcp

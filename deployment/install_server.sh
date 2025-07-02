@@ -1,7 +1,10 @@
 #!/bin/bash
-# 服务器环境安装脚本 - 针对Ubuntu 22.04优化
+# 服务器环境安装脚本 - 针对Ubuntu 22.04优化（非交互模式）
 
 set -e  # 遇到错误立即退出
+
+# 设置非交互模式
+export DEBIAN_FRONTEND=noninteractive
 
 # 彩色输出函数
 GREEN='\033[0;32m'
@@ -26,7 +29,7 @@ log_error() {
     echo -e "${RED}❌ $1${NC}"
 }
 
-echo -e "${BLUE}🚀 开始安装服务器环境...${NC}"
+echo -e "${BLUE}🚀 开始安装服务器环境（非交互模式）...${NC}"
 echo -e "${BLUE}📋 系统信息：${NC}"
 
 # 显示系统信息
@@ -48,8 +51,8 @@ detect_os() {
     case "$OS" in
         *"Ubuntu"*|*"Debian"*)
             PACKAGE_MANAGER="apt"
-            INSTALL_CMD="apt install -y"
-            UPDATE_CMD="apt update && apt upgrade -y"
+            INSTALL_CMD="apt install -yq"
+            UPDATE_CMD="apt update && apt upgrade -yq"
             log_success "检测到Ubuntu/Debian系统"
             ;;
         *"CentOS"*|*"Red Hat"*|*"Rocky"*|*"AlmaLinux"*)
@@ -69,8 +72,8 @@ detect_os() {
             if command -v apt &> /dev/null; then
                 log_info "检测到apt，使用Ubuntu/Debian模式"
                 PACKAGE_MANAGER="apt"
-                INSTALL_CMD="apt install -y"
-                UPDATE_CMD="apt update && apt upgrade -y"
+                INSTALL_CMD="apt install -yq"
+                UPDATE_CMD="apt update && apt upgrade -yq"
             elif command -v yum &> /dev/null; then
                 log_info "检测到yum，使用RHEL兼容模式"
                 PACKAGE_MANAGER="yum"

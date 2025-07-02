@@ -35,7 +35,7 @@ sudo dnf install curl git -y
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
 ```
 
-#### 阿里云Linux (Alibaba Cloud Linux) 系统：
+#### 阿里云 Linux (Alibaba Cloud Linux) 系统：
 
 ```bash
 # 第一步：安装必要工具
@@ -217,7 +217,7 @@ git pull origin master
 
    #### Ubuntu/Debian 系统：
 
-   ```bash
+   ````bash
    sudo ufw enable
    sudo ufw allow ssh
    sudo ufw allow 80
@@ -230,7 +230,7 @@ git pull origin master
    sudo firewall-cmd --permanent --add-port=80/tcp
    sudo firewall-cmd --permanent --add-port=443/tcp
    sudo firewall-cmd --reload
-   ```
+   ````
 
 2. **定期更新**:
 

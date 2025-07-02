@@ -27,9 +27,33 @@ detect_os() {
             INSTALL_CMD="dnf install -y"
             UPDATE_CMD="dnf update -y"
             ;;
+        *"Alibaba Cloud Linux"*|*"Alinux"*|*"alinux"*)
+            PACKAGE_MANAGER="yum"
+            INSTALL_CMD="yum install -y"
+            UPDATE_CMD="yum update -y"
+            ;;
         *)
             echo "❌ 不支持的操作系统: $OS"
-            exit 1
+            echo "尝试检测包管理器..."
+            if command -v yum &> /dev/null; then
+                echo "检测到yum，使用RHEL兼容模式"
+                PACKAGE_MANAGER="yum"
+                INSTALL_CMD="yum install -y"
+                UPDATE_CMD="yum update -y"
+            elif command -v dnf &> /dev/null; then
+                echo "检测到dnf，使用Fedora模式"
+                PACKAGE_MANAGER="dnf"
+                INSTALL_CMD="dnf install -y"
+                UPDATE_CMD="dnf update -y"
+            elif command -v apt &> /dev/null; then
+                echo "检测到apt，使用Debian模式"
+                PACKAGE_MANAGER="apt"
+                INSTALL_CMD="apt install -y"
+                UPDATE_CMD="apt update && apt upgrade -y"
+            else
+                echo "❌ 无法检测到支持的包管理器"
+                exit 1
+            fi
             ;;
     esac
     
@@ -46,8 +70,24 @@ sudo $UPDATE_CMD
 # 安装Docker
 echo "🐳 安装Docker..."
 if ! command -v docker &> /dev/null; then
-    curl -fsSL https://get.docker.com -o get-docker.sh
-    sudo sh get-docker.sh
+    if [ "$PACKAGE_MANAGER" = "yum" ]; then
+        # 阿里云Linux特殊处理
+        echo "阿里云Linux系统，使用yum安装Docker..."
+        sudo $INSTALL_CMD docker
+        
+        # 如果yum仓库没有docker，尝试添加Docker仓库
+        if [ $? -ne 0 ]; then
+            echo "从默认仓库安装失败，尝试添加Docker CE仓库..."
+            sudo yum install -y yum-utils
+            sudo yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo
+            sudo $INSTALL_CMD docker-ce docker-ce-cli containerd.io
+        fi
+    else
+        # 其他系统使用官方脚本
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+    fi
+    
     sudo usermod -aG docker $USER
     sudo systemctl start docker
     sudo systemctl enable docker
@@ -59,9 +99,16 @@ fi
 # 安装Docker Compose
 echo "🔧 安装Docker Compose..."
 if ! command -v docker-compose &> /dev/null; then
-    sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
-    echo "✅ Docker Compose安装完成"
+    # 尝试从GitHub下载
+    if curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose 2>/dev/null; then
+        sudo chmod +x /usr/local/bin/docker-compose
+        echo "✅ Docker Compose安装完成"
+    else
+        echo "GitHub下载失败，尝试使用pip安装..."
+        sudo $INSTALL_CMD python3-pip
+        sudo pip3 install docker-compose
+        echo "✅ Docker Compose通过pip安装完成"
+    fi
 else
     echo "ℹ️  Docker Compose已安装"
 fi
@@ -82,11 +129,14 @@ echo "🔒 安装Certbot..."
 if ! command -v certbot &> /dev/null; then
     if [ "$PACKAGE_MANAGER" = "apt" ]; then
         sudo $INSTALL_CMD certbot python3-certbot-nginx
-    else
+    elif [ "$PACKAGE_MANAGER" = "yum" ]; then
+        # 阿里云Linux需要先安装EPEL
+        sudo $INSTALL_CMD epel-release
         sudo $INSTALL_CMD certbot python3-certbot-nginx
-        # CentOS可能需要EPEL仓库
-        sudo dnf install -y epel-release
-        sudo dnf install -y certbot python3-certbot-nginx
+    else
+        # CentOS/RHEL
+        sudo $INSTALL_CMD epel-release
+        sudo $INSTALL_CMD certbot python3-certbot-nginx
     fi
     echo "✅ Certbot安装完成"
 else

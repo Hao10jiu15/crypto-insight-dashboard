@@ -6,7 +6,7 @@
 
 您需要一台具备以下配置的 Linux 服务器：
 
-- **操作系统**: Ubuntu 20.04+ 或 CentOS 8+
+- **操作系统**: Ubuntu 20.04+ 或 CentOS 8+ 或 Alibaba Cloud Linux
 - **内存**: 最少 2GB（推荐 4GB+）
 - **存储**: 至少 20GB 可用空间
 - **网络**: 稳定的公网连接
@@ -30,6 +30,17 @@ curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard
 # 第一步：安装必要工具
 sudo dnf update -y
 sudo dnf install curl git -y
+
+# 第二步：下载并运行环境安装脚本
+curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
+```
+
+#### 阿里云Linux (Alibaba Cloud Linux) 系统：
+
+```bash
+# 第一步：安装必要工具
+sudo yum update -y
+sudo yum install curl git -y
 
 # 第二步：下载并运行环境安装脚本
 curl -fsSL https://raw.githubusercontent.com/Hao10jiu15/crypto-insight-dashboard/master/deployment/install_server.sh | bash
@@ -211,10 +222,7 @@ git pull origin master
    sudo ufw allow ssh
    sudo ufw allow 80
    sudo ufw allow 443
-   ```
-
-   #### CentOS/RHEL 系统：
-
+   ```   #### CentOS/RHEL/阿里云Linux 系统：
    ```bash
    sudo systemctl start firewalld
    sudo systemctl enable firewalld

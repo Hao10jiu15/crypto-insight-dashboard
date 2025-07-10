@@ -47,19 +47,16 @@ INSTALLED_APPS = [
     "corsheaders",
     "django_celery_beat",
     "djmoney",
-    # 我们自己的应用 (后续创建)
-    # "apps.market_data",
     "apps.market_data.apps.MarketDataConfig",
     "apps.data_ingestion.apps.DataIngestionConfig",
-    "apps.api.apps.ApiConfig",  # 新增：API应用
+    "apps.api.apps.ApiConfig",
     "apps.ml_predictions.apps.MlPredictionsConfig",
-    # 'apps.users',
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # 新增：CORS中间件
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -137,7 +134,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # WhiteNoise 配置
 # http://whitenoise.evans.io/en/stable/django.html
 STATICFILES_STORAGE = (
-    "whitenoise.storage.CompressedManifestStaticFilesStorage"  # <--- 添加/修改这一行
+    "whitenoise.storage.CompressedManifestStaticFilesStorage" 
 )
 
 # --- 默认主键字段类型 ---

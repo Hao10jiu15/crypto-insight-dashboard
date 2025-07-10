@@ -7,7 +7,6 @@ from django.core.cache import cache
 import requests
 
 # --- Django REST Framework Imports ---
-# 修正：同时导入 generics 和 viewsets
 from rest_framework import viewsets, generics
 from rest_framework.response import Response
 from rest_framework.exceptions import ParseError
@@ -66,7 +65,6 @@ class MarketDataViewSet(viewsets.ViewSet):
             aware_end_date = timezone.make_aware(naive_end_date)
             queryset = queryset.filter(time__lte=aware_end_date)
 
-        # 注意：此版本为了提供技术指标，暂时不进行interval聚合
         # 直接返回日线数据
 
         # 5. 格式化结果
@@ -76,7 +74,6 @@ class MarketDataViewSet(viewsets.ViewSet):
             formatted_data.append(
                 [
                     timestamp,
-                    # 【修正】通过 .amount 属性获取MoneyField的数值
                     float(item.open.amount),
                     float(item.close.amount),
                     float(item.low.amount),
@@ -299,7 +296,7 @@ class ForecastComponentsView(viewsets.ViewSet):
             return Response(cached_data)
 
         try:
-            # 1. 加载指定货币的最新模型 (已在上面获取)
+            # 1. 加载指定货币的最新模型
             model = joblib.load(model_record.model_file_path)
 
             # 2. 获取该货币的历史数据用于预测

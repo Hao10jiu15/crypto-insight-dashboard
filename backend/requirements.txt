@@ -1,7 +1,7 @@
 # Django and Server
 django==5.0.6
 gunicorn==22.0.0
-whitenoise==6.6.0  # 新增：用于高效服务静态文件
+whitenoise==6.6.0
 
 # Database
 psycopg2-binary==2.9.9
@@ -23,7 +23,7 @@ django-cors-headers==4.4.0
 requests==2.32.3
 
 # Machine Learning & Forecasting
-numpy==1.26.4      # 关键修改：锁定numpy版本以兼容Prophet
+numpy==1.26.4      
 prophet==1.1.5
 pandas==2.2.2
 pandas-ta==0.3.14b

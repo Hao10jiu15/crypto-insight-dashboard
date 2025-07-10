@@ -14,8 +14,8 @@ COINGECKO_BASE_URL = "https://api.coingecko.com/api/v3"
 @shared_task(bind=True, max_retries=3, default_retry_delay=60)
 def fetch_historical_data_for_coin(self, currency_id):
     """
-    一个Celery任务，用于获取并存储单个加密货币的历史市场数据 (已修正)。
-    现在会正确处理交易量和时区。
+    获取并存储单个加密货币的历史市场数据的Celery任务。
+    处理交易量和时区信息。
     """
     try:
         currency = Currency.objects.get(id=currency_id)
@@ -33,19 +33,17 @@ def fetch_historical_data_for_coin(self, currency_id):
         response.raise_for_status()
         data = response.json()
 
-        # --- 关键修改：处理交易量 ---
-        # 1. 将交易量数据转换成一个以时间戳为键的字典，方便快速查找
+        # 将交易量数据转换成一个以时间戳为键的字典，方便快速查找
         volumes_dict = {item[0]: item[1] for item in data.get("total_volumes", [])}
 
-        # 2. 遍历价格数据，并从字典中匹配对应的交易量
+        # 遍历价格数据，并从字典中匹配对应的交易量
         for price_point in data.get("prices", []):
             timestamp, price = price_point
 
             # 从字典中获取交易量，如果找不到则默认为0
             volume = volumes_dict.get(timestamp, 0)
 
-            # --- 关键修改：处理时区 (采纳您的方案) ---
-            # CoinGecko的时间戳是UTC标准的毫秒时间戳
+            # CoinGecko的时间戳是UTC标准的毫秒时间戳，需要处理时区
             naive_record_time = datetime.fromtimestamp(timestamp / 1000)
             # 创建一个UTC时区的感知型datetime对象
             aware_record_time = timezone.make_aware(naive_record_time, dt_timezone.utc)
@@ -59,7 +57,7 @@ def fetch_historical_data_for_coin(self, currency_id):
                     "high": Decimal(price),
                     "low": Decimal(price),
                     "close": Decimal(price),
-                    "volume": Decimal(volume),  # 使用真实的交易量数据
+                    "volume": Decimal(volume),  # 使用交易量数据
                 },
             )
 

@@ -1,7 +1,5 @@
-# /backend/apps/api/urls.py
 from django.urls import path
 
-# 确保导入了所有需要用到的视图
 from .views import (
     CurrencyListView,
     MarketDataViewSet,
@@ -13,8 +11,6 @@ from .views import (
 
 app_name = "api"
 
-# --- 定义最终的URL模式 ---
-# 我们为每一个ViewSet的每一个动作都手动创建路径
 urlpatterns = [
     # /api/currencies/
     path("currencies/", CurrencyListView.as_view(), name="currency-list"),
